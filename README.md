@@ -1,9 +1,9 @@
-<<<<<<< HEAD
+
 # flutter_244107020224
+Week-1 :
+Getting Started
+Modelling UI
 
-A new Flutter project.
-
-## Getting Started
 
 This project is a starting point for a Flutter application.
 
