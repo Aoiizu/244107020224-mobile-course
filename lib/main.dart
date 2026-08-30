@@ -21,12 +21,6 @@ class MyApp extends StatelessWidget {
             Text('Alif Ahnaf Hendrawan', style: TextStyle(fontSize: 24)),
             Text('Mobile Programming - Week 1'),
             Text('244107020224'),
-            ElevatedButton(
-            onPressed: () {
-              print('Button'); 
-            },
-            child: Text('Click'),
-          )
           ]),
         ),
       ),
