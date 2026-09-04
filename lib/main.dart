@@ -1,28 +1,65 @@
 import 'package:flutter/material.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(const ProfileApp());
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class ProfileApp extends StatelessWidget {
+  const ProfileApp({super.key});
 
   // This widget is the root of your application.
-  @override
- Widget build(BuildContext context) {
-    return MaterialApp(
+   @override
+  Widget build(BuildContext context) {
+    return const MaterialApp(
       debugShowCheckedModeBanner: false,
       home: Scaffold(
-        appBar: AppBar(title: const Text('Student Profile')),
-        body: const Center(
-          child: Column(mainAxisSize: MainAxisSize.min, children: [
-            Icon(Icons.school, size: 72),
-            SizedBox(height: 16),
-            Text('Alif Ahnaf Hendrawan', style: TextStyle(fontSize: 24)),
-            Text('Mobile Programming - Week 1'),
+        body: Center(child: ProfileCard()),
+      ),
+    );
+  }
+}
+
+class ProfileCard extends StatelessWidget {
+  const ProfileCard({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 320,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.indigo.shade50,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            children: [
+              const CircleAvatar(child: Icon(Icons.person)),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: const [
+                    Text('Student Name',
+                        style: TextStyle(fontWeight: FontWeight.bold)),
+                    Text('Alif Ahnaf Hendrawan'),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          const Row(children: [
+            Expanded(child: Text('Student ID')),
             Text('244107020224'),
           ]),
-        ),
+          const Row(children: [
+            Expanded(child: Text('Class')),
+            Text('3I-Informatic Engineering'),
+          ]),
+        ],
       ),
     );
   }
