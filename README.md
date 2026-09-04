@@ -11,5 +11,8 @@
 
 ## 4.(`flutter devices`)
 ![Flutter Devices](image-5.png)
+
+## 5. (`flutter result`)
+![alt text](image-6.png)
 =======
 
