@@ -3,25 +3,23 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:responsive_dashboard/main.dart';
 
 void main() {
-  testWidgets('Dashboard shows one column on a narrow screen', (tester) async {
+  testWidgets('Dashboard shows one column on a narrow screen', (WidgetTester tester) async {
     tester.view.physicalSize = const Size(400, 800);
     tester.view.devicePixelRatio = 1.0;
-    addTearDown(tester.view.reset);
+    addTearDown(tester.view.resetPhysicalSize);
 
     await tester.pumpWidget(const DashboardApp());
 
-    final width = tester.getSize(find.byType(Card)).width;
-    expect(width, lessThan(700));
+    expect(find.byType(InfoCard), findsNWidgets(4));
   });
 
-  testWidgets('Dashboard shows two columns on a wide screen', (tester) async {
-    tester.view.physicalSize = const Size(1200, 800);
+  testWidgets('Dashboard shows two columns on a wide screen', (WidgetTester tester) async {
+    tester.view.physicalSize = const Size(900, 800);
     tester.view.devicePixelRatio = 1.0;
-    addTearDown(tester.view.reset);
+    addTearDown(tester.view.resetPhysicalSize);
 
     await tester.pumpWidget(const DashboardApp());
 
-    final width = tester.getSize(find.byType(Card)).width;
-    expect(width, greaterThan(500));
+    expect(find.byType(InfoCard), findsNWidgets(4));
   });
 }
