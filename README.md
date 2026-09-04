@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Week 1: Creating New Project
 
 ## 1.(`flutter --version`)
@@ -11,3 +12,5 @@
 
 ## 4.(`flutter devices`)
 ![Flutter Devices](image-5.png)
+=======
+>>>>>>> 8608da10c7a7f0c42526f66664edc1c469dffea4
