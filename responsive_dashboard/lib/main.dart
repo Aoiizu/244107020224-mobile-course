@@ -60,7 +60,7 @@ class DashboardPage extends StatelessWidget {
                 children: [
                   ExcludeSemantics(
                     child: Icon(
-                      isDark ? Icons.dark_mode : Icons.light_mode,
+                      isDark ? Icons.add_business_outlined : Icons.add_business_rounded,
                     ),
                   ),
                   const SizedBox(width: 4),
@@ -97,7 +97,7 @@ class DashboardPage extends StatelessWidget {
                           radius: 30,
                           backgroundColor: theme.colorScheme.primaryContainer,
                           child: Text(
-                            'JD',
+                            'AH',
                             style: TextStyle(
                               fontSize: 22,
                               fontWeight: FontWeight.bold,
@@ -111,7 +111,7 @@ class DashboardPage extends StatelessWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'John Doe',
+                                'Alif Ahnaf Hendrawan',
                                 style: theme.textTheme.titleLarge?.copyWith(
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -142,7 +142,7 @@ class DashboardPage extends StatelessWidget {
                     InfoCard(title: 'Assignments', value: '8'),
                     InfoCard(title: 'Attendance', value: '92%'),
                     InfoCard(title: 'Portfolio', value: 'Ready'),
-                    InfoCard(title: 'Current Week', value: '01'),
+                    InfoCard(title: 'Current Week', value: '02'),
                   ],
                 ),
               ],
