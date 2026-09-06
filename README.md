@@ -14,7 +14,7 @@
 # Fluter Analyze 
 ![alt text](responsive_dashboard/screenshots/image-5.png)
 # Flutter Test
-![alt text](image-2.png)
+![alt text](responsive_dashboard/screenshots/image.png)
 
 # Reflection & Questions
 
