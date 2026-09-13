@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:week3_todo/main.dart';
+import 'package:week3_assignment/main.dart';
 
 void main() {
   testWidgets('adds a new task', (tester) async {

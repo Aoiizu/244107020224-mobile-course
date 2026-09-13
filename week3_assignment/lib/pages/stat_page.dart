@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'providers/stat_provider.dart';
+import 'provider/stat_provider.dart';
 
 class StatsPage extends ConsumerWidget {
   const StatsPage({super.key});

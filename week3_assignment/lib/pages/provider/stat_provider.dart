@@ -24,7 +24,7 @@ class StatsNotifier extends AsyncNotifier<List<Stat>> {
     }
 
     return const [
-      Stat(label: 'Active Users', value: 1240),
+      Stat(label: 'Active Users', value: 2222),
       Stat(label: 'Sessions Today', value: 389),
       Stat(label: 'Avg. Duration (min)', value: 14),
     ];

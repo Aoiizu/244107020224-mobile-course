@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'providers/todo_provider.dart';
+import 'provider/todo_provider.dart';
 
 class TodoTile extends ConsumerWidget {
   final int index;
@@ -47,7 +47,7 @@ class _TodoPageState extends ConsumerState<TodoPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('ToDo Riverpod'),
+        title: const Text('ToDo'),
         actions: [
           IconButton(
             icon: Icon(_showUnfinishedOnly
