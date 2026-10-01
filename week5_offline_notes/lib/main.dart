@@ -1,9 +1,13 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:sqflite/sqflite.dart' show databaseFactory;
+import 'package:sqflite_common_ffi_web/sqflite_ffi_web.dart';
+
 import 'data/prefs.dart';
 import 'pages/note_detail_page.dart';
-import 'pages/notes_page.dart';
+import 'pages/note_page.dart';
 import 'pages/posts_page.dart';
 import 'pages/settings_page.dart';
 
@@ -22,6 +26,12 @@ final _router = GoRouter(
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Use SQLite for web (runs in the browser)
+  if (kIsWeb) {
+    databaseFactory = databaseFactoryFfiWeb;
+  }
+
   final prefs = PrefsRepository();
   final previousOpen = await prefs.getLastOpened(); // read BEFORE overwriting
   await prefs.markOpenedNow();
