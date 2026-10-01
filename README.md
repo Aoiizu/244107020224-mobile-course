@@ -1,27 +1,19 @@
-# Lab 1 & 2
-![alt text](image-18.png)
-# Lab 3 
-![alt text](image-19.png)
-# AI Challenge
-![alt text](image-20.png)
-# Refactor
-![alt text](image-21.png)
 # Assignment
 
-## Why is the UI forbidden from calling Dio directly? What breaks if this rule is violated? 
+## Why must the note list not be stored in SharedPreferences? What breaks if this rule is violated?
 
-### If widgets called Dio directly, they'd be responsible for parsing responses, handling errors, and knowing API details, which mixes UI code with network code. Testing becomes painful because every widget test would need a real network call instead of a fake repository. Swapping the HTTP client or API later would mean editing every screen instead of one file. Keeping Dio behind a repository keeps the UI simple and testable.
+### SharedPreferences is for small primitive values. Storing the notes as one JSON string means rewriting the whole list on every change, with no real querying, sorting, or per-row dirty flag. It gets slow and fragile, and sync breaks. Collections belong in SQLite.
 
-## When is client-side pagination enough, and when must you rely on server pagination? 
+## When is cache-first enough, and when do you need another strategy (e.g. network-first for real-time prices)?
 
-### Client-side pagination works when the full dataset is small and cheap to fetch at once, so you just slice it locally for display. Once the dataset gets large or unbounded, fetching everything upfront wastes bandwidth and memory, so you need server pagination using page and limit parameters so the server only sends the chunk you actually need.
+### Cache-first is enough when data changes slowly and slightly old data is fine, like posts or notes. For live data like prices, use network-first or streams so users never see stale values.
 
-## How do repository exceptions become AsyncError without try/catch in every widget? When is explicit try/catch still needed? 
+## How does a dirty flag become a sync queue without blocking the UI? When does a separate queue (outbox table) become necessary?
 
-### Riverpod's AsyncNotifier and FutureProvider automatically wrap the future returned from build in a try/catch internally, so if the repository throws, the state becomes AsyncError on its own. Explicit try/catch is still needed when you're calling something imperatively, like a refresh method triggered by a button, since that call happens outside the framework's automatic wrapping and you want to control how the state updates.
+### Local writes set `dirty = 1` and return immediately. Then `syncNotes` uploads the dirty rows in the background and clears the flag only on success. An outbox table is needed when operation order or retries matter (create, edit, delete of the same note), because one flag can't record what happened.
 
-## Which part of the AI output did you fix, and why? 
+## Which part of the AI recommendation did you reject, and why?
 
-### The first fix for Comment.fromJson used a nullable cast like postId as num which still crashed when the field came back as a String. I changed it to check the type first and fall back to a default value instead of casting directly, since a cast only tolerates null, not wrong types. I also had to update the widget test to use pumpAndSettle instead of a single pump, since the app makes a network call on startup and a single pump doesn't wait for it to finish.
+### I rejected any suggestion to keep the note list in SharedPreferences, because it is fragile for collections and can't support a dirty flag or `updated_at` for sync. I also didn't accept the AI's boilerplate and "real-time" claims as given. I checked them after installing the packages and chose SharedPreferences for settings plus sqflite for notes, since a notes app needs queries and sync columns more than reactive streams.
 
-
+![alt text](image-22.png)
