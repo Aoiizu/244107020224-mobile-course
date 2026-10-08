@@ -1,88 +1,37 @@
+import 'dart:async';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'messaging/push_service.dart';
-import 'pages/announcement_page.dart';
-import 'pages/home_pages.dart';
-import 'pages/login_pages.dart';
-import 'providers/auth_providers.dart';
-import 'routes.dart';
-
-final routerProvider = Provider<GoRouter>((ref) {
-  final refresh = ValueNotifier<int>(0);
-  ref.listen(authStateProvider, (_, __) => refresh.value++);
-  ref.onDispose(refresh.dispose);
-
-  return GoRouter(
-    refreshListenable: refresh,
-    redirect: (context, state) {
-      final auth = ref.read(authStateProvider);
-      if (auth.isLoading && !auth.hasValue) return null;
-      final loggedIn = auth.value ?? false;
-      final atLogin = state.matchedLocation == Routes.login;
-      if (!loggedIn && !atLogin) return Routes.login;
-      if (loggedIn && atLogin) return Routes.home;
-      return null;
-    },
-    routes: [
-      GoRoute(path: Routes.login, builder: (_, __) => const LoginPage()),
-      GoRoute(path: Routes.home, builder: (_, __) => const HomePage()),
-      GoRoute(
-        path: Routes.announcement,
-        builder: (_, s) => AnnouncementPage(id: s.pathParameters['id'] ?? ''),
-      ),
-    ],
-  );
-});
+import 'package:campus_notification_app/firebase_options.dart';
+import 'data/app_deps.dart';
+import 'notifications/fcm_service.dart';
+import 'router/app_router.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  try {
-    await Firebase.initializeApp();
-  } catch (e) {
-    debugPrint('Firebase init failed: $e');
-  }
-  runApp(const ProviderScope(child: App()));
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
+
+  final deps = AppDeps();
+  await deps.session.restore();
+  final router = buildRouter(deps);
+
+  runApp(CampusApp(router: router, deps: deps));
+  unawaited(deps.fcm.init(router)); // permission, token, topic, tap handlers
 }
 
-class App extends ConsumerStatefulWidget {
-  const App({super.key});
-  @override
-  ConsumerState<App> createState() => _AppState();
-}
-
-class _AppState extends ConsumerState<App> {
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      if (Firebase.apps.isEmpty) {
-        debugPrint('Firebase not configured, skipping push setup');
-        return;
-      }
-      final router = ref.read(routerProvider);
-      try {
-        await PushService.init(
-          go: router.go,
-          sendToken: (token) async {
-            try {
-              await ref.read(dioProvider).post(
-                '/devices',
-                data: {'fcm_token': token, 'platform': 'android'},
-              );
-            } catch (_) {}
-          },
-        );
-      } catch (e) {
-        debugPrint('Push init failed: $e');
-      }
-    });
-  }
+class CampusApp extends StatelessWidget {
+  const CampusApp({super.key, required this.router, required this.deps});
+  final GoRouter router;
+  final AppDeps deps;
 
   @override
   Widget build(BuildContext context) => MaterialApp.router(
-        title: 'Campus Notify',
-        routerConfig: ref.watch(routerProvider),
+        title: 'Campus Notifications',
+        debugShowCheckedModeBanner: false,
+        scaffoldMessengerKey: deps.messengerKey,
+        routerConfig: router,
+        theme: ThemeData(colorSchemeSeed: Colors.indigo, useMaterial3: true),
       );
 }
