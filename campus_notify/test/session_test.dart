@@ -1,9 +1,9 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:campus_notification_app/data/app_deps.dart';
-import 'package:campus_notification_app/data/mock_adapter.dart';
-import 'package:campus_notification_app/data/session.dart';
-import 'package:campus_notification_app/data/token_store.dart';
+import 'data/app_deps.dart';
+import 'data/mock_adapter.dart';
+import 'data/session.dart';
+import 'data/token_store.dart';
 
 Future<(AppDeps, MockAdapter)> setUpDeps() async {
   final mock = MockAdapter();

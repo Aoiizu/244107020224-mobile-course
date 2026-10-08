@@ -4,7 +4,6 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:campus_notification_app/firebase_options.dart';
 import '../data/session.dart';
 import '../router/route_logic.dart';
 
@@ -12,7 +11,7 @@ import '../router/route_logic.dart';
 /// background/terminated state. The system tray shows the notification part.
 @pragma('vm:entry-point')
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  await Firebase.initializeApp();
 }
 
 class FcmService {
