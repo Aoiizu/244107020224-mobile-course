@@ -38,7 +38,11 @@ final routerProvider = Provider<GoRouter>((ref) {
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
+  try {
+    await Firebase.initializeApp();
+  } catch (e) {
+    debugPrint('Firebase init failed: $e');
+  }
   runApp(const ProviderScope(child: App()));
 }
 
@@ -52,20 +56,27 @@ class _AppState extends ConsumerState<App> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (Firebase.apps.isEmpty) {
+        debugPrint('Firebase not configured, skipping push setup');
+        return;
+      }
       final router = ref.read(routerProvider);
-      PushService.init(
-        go: router.go,
-        sendToken: (token) async {
-          try {
-            await ref.read(dioProvider).post(
-              '/devices',
-              data: {'fcm_token': token, 'platform': 'android'},
-            );
-          } catch (_) {
-          }
-        },
-      );
+      try {
+        await PushService.init(
+          go: router.go,
+          sendToken: (token) async {
+            try {
+              await ref.read(dioProvider).post(
+                '/devices',
+                data: {'fcm_token': token, 'platform': 'android'},
+              );
+            } catch (_) {}
+          },
+        );
+      } catch (e) {
+        debugPrint('Push init failed: $e');
+      }
     });
   }
 

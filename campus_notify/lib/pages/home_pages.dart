@@ -1,3 +1,4 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -17,9 +18,13 @@ class _HomePageState extends ConsumerState<HomePage> {
   @override
   void initState() {
     super.initState();
-    FirebaseMessaging.instance.getToken().then((t) {
-      if (mounted && t != null) setState(() => _token = '${t.substring(0, 12)}...');
-    });
+    if (Firebase.apps.isNotEmpty) {
+      FirebaseMessaging.instance.getToken().then((t) {
+        if (mounted && t != null) {
+          setState(() => _token = '${t.substring(0, 12)}...');
+        }
+      });
+    }
   }
 
   @override
