@@ -1,35 +1,30 @@
 # Lab 1 
-![alt text](image-23.png)
+![alt text](image-26.png)
 
 # Lab 2
-![alt text](image-24.png)
+![alt text](image-27.png)
 
 # Lab 3
-![alt text](image-25.png)
+![alt text](image-28.png)
 
 # Assignment
-
+![alt text](image-29.png)
+![alt text](image-30.png)
+![alt text](image-31.png)
 
 # Reflection 
 
-## 1. Why must refresh tokens never live in SharedPreferences? What is the risk if one leaks?
+## 1. Why must the repository interface live in domain, not in data? What breaks if it is reversed?
+The domain says what it needs, and the data layer provides it. If the interface lived in `data`, the domain would import the data layer and depend on Dio or storage. Use cases then can't be tested without them, and swapping a data source forces changes in the domain.
 
-SharedPreferences stores data as plain text in the app's sandbox. It can be read on a rooted device, pulled from an unencrypted backup, or stolen by malware. `flutter_secure_storage` uses Android Keystore / iOS Keychain, so the data stays encrypted.
+## 2. When is a use case truly needed, and when is repository straight to notifier enough?
+A use case is needed when there is a business rule or several sources are combined, like `LoginUser` (validation) and `GetAnnouncements` (sorting). For simple one-line calls like `fetchById` or `logout`, the provider can call the repository directly.
 
-A refresh token is long-lived and can create new access tokens. If it leaks, an attacker can keep getting valid access for weeks without the password, and the victim notices nothing. An access token is short-lived, so a leak is much less harmful.
+## 3. What does over-engineering cost a small team? When is the cost worth it?
+Each extra class is more code to write, read, and test, and it only forwards a call. It is worth it when the app is big, several people work on it, rules will grow, or the same operation is reused in many places.
 
-## 2. What breaks if `onTokenRefresh` is ignored for a whole semester?
-
-The backend keeps sending to an old token. FCM tokens change after a reinstall, a new phone, or cleared app data. Messages to the old token are silently dropped, so students stop getting important alerts like schedule changes. The database also fills with dead tokens. The fix is simple: listen to `onTokenRefresh` and send the new token to the backend.
-
-## 3. When do you use a topic vs a device token?
-
-- **Topic:** for a broadcast to a group. Example: "Library closes at 6 PM on Friday" sent to `campus-announcement`.
-- **Device token:** for one specific person. Example: "Your thesis supervisor approved your room booking", which is personal data and must not go to a topic.
-
-Rule of thumb: audience by interest means topic, audience by identity means device token.
-
-## 4. Which part of the AI draft did you reject or fix, and why?
-
-- **Token storage:** the draft used SharedPreferences. I replaced it with `flutter_secure_storage` because of question 1.
-- **Refresh interceptor:** it had no guard, so a failed refresh could loop and several 401s caused several refresh calls. I added a `retried` flag so each request refreshes at most once, and a failed refresh clears the session and returns to `/login`.
+## 4. Which part of the AI proposal did you reject or simplify, and why?
+- I kept use cases only where there is real logic, not for every method.
+- I deleted `app_deps.dart` because Riverpod already does the wiring.
+- I removed duplicate files (`home_pages`, `login_pages`, `fcm_service`) that made imports confusing.
+- I kept the announcements source mocked because there is no backend yet.
