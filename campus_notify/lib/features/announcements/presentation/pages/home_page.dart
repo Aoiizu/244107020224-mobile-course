@@ -22,7 +22,8 @@ class _HomePageState extends ConsumerState<HomePage> {
     super.initState();
     if (Firebase.apps.isNotEmpty) {
       FirebaseMessaging.instance.getToken().then((t) {
-        if (mounted && t != null) setState(() => _token = '${t.substring(0, 12)}...');
+        if (mounted && t != null)
+          setState(() => _token = '${t.substring(0, 12)}...');
       });
     }
   }
@@ -38,7 +39,9 @@ class _HomePageState extends ConsumerState<HomePage> {
         ),
       ]),
       body: Column(children: [
-        Padding(padding: const EdgeInsets.all(8), child: Text('FCM token: $_token')),
+        Padding(
+            padding: const EdgeInsets.all(8),
+            child: Text('FCM token: $_token')),
         Expanded(
           child: list.when(
             loading: () => const Center(child: CircularProgressIndicator()),

@@ -22,7 +22,8 @@ class AnnouncementPage extends ConsumerWidget {
         error: (e, _) => Center(child: Text(messageOf(e))),
         data: (x) => Padding(
           padding: const EdgeInsets.all(16),
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          child:
+              Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text(x.title, style: Theme.of(context).textTheme.headlineSmall),
             const SizedBox(height: 4),
             Text(formatDate(x.publishedAt)),

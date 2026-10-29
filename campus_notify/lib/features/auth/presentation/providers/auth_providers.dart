@@ -12,7 +12,8 @@ final tokenStoreProvider = Provider((_) => TokenStore());
 final authRemoteProvider = Provider((_) => AuthRemoteSource());
 
 final authRepositoryProvider = Provider<AuthRepository>((ref) =>
-    AuthRepositoryImpl(ref.watch(authRemoteProvider), ref.watch(tokenStoreProvider)));
+    AuthRepositoryImpl(
+        ref.watch(authRemoteProvider), ref.watch(tokenStoreProvider)));
 
 final loginUserProvider =
     Provider((ref) => LoginUser(ref.watch(authRepositoryProvider)));

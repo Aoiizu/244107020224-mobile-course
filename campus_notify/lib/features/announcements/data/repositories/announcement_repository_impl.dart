@@ -13,7 +13,8 @@ class AnnouncementRepositoryImpl implements AnnouncementRepository {
   Future<Result<List<Announcement>>> fetchAll() async {
     try {
       final rows = await _remote.fetchAll();
-      return Ok(rows.map((j) => AnnouncementModel.fromJson(j).toEntity()).toList());
+      return Ok(
+          rows.map((j) => AnnouncementModel.fromJson(j).toEntity()).toList());
     } catch (_) {
       return const Err(NetworkFailure('Could not load announcements'));
     }

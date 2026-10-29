@@ -1,7 +1,8 @@
 import 'package:dio/dio.dart';
 import 'token_store.dart';
 
-Dio buildApiClient(TokenStore store, Future<String> Function(String refreshToken) refresh) {
+Dio buildApiClient(
+    TokenStore store, Future<String> Function(String refreshToken) refresh) {
   final dio = Dio(BaseOptions(baseUrl: 'https://example-campus-api.test'));
 
   dio.interceptors.add(InterceptorsWrapper(

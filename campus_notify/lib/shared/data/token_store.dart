@@ -1,7 +1,8 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class TokenStore {
-  TokenStore([FlutterSecureStorage? s]) : _s = s ?? const FlutterSecureStorage();
+  TokenStore([FlutterSecureStorage? s])
+      : _s = s ?? const FlutterSecureStorage();
   final FlutterSecureStorage _s;
 
   Future<void> save({required String access, required String refresh}) async {

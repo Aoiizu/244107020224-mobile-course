@@ -28,16 +28,26 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(children: [
-          TextField(controller: _email, decoration: const InputDecoration(labelText: 'Email')),
-          TextField(controller: _pass, obscureText: true, decoration: const InputDecoration(labelText: 'Password')),
+          TextField(
+              controller: _email,
+              decoration: const InputDecoration(labelText: 'Email')),
+          TextField(
+              controller: _pass,
+              obscureText: true,
+              decoration: const InputDecoration(labelText: 'Password')),
           const SizedBox(height: 16),
           if (auth.hasError)
-            Text(messageOf(auth.error!), style: const TextStyle(color: Colors.red)),
+            Text(messageOf(auth.error!),
+                style: const TextStyle(color: Colors.red)),
           FilledButton(
             onPressed: auth.isLoading
                 ? null
-                : () => ref.read(authStateProvider.notifier).login(_email.text.trim(), _pass.text),
-            child: auth.isLoading ? const CircularProgressIndicator() : const Text('Login'),
+                : () => ref
+                    .read(authStateProvider.notifier)
+                    .login(_email.text.trim(), _pass.text),
+            child: auth.isLoading
+                ? const CircularProgressIndicator()
+                : const Text('Login'),
           ),
         ]),
       ),

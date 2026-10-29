@@ -18,7 +18,8 @@ class FakeAnnouncementRepo implements AnnouncementRepository {
       fail ? const Err(NetworkFailure('offline')) : Ok(items);
 
   @override
-  Future<Result<Announcement>> fetchById(String id) => throw UnimplementedError();
+  Future<Result<Announcement>> fetchById(String id) =>
+      throw UnimplementedError();
 }
 
 class FakeAuthRepo implements AuthRepository {
@@ -40,8 +41,10 @@ class FakeAuthRepo implements AuthRepository {
 void main() {
   test('GetAnnouncements sorts newest first', () async {
     final repo = FakeAnnouncementRepo(items: [
-      Announcement(id: '1', title: 'old', body: '', publishedAt: DateTime(2026, 1, 1)),
-      Announcement(id: '2', title: 'new', body: '', publishedAt: DateTime(2026, 6, 1)),
+      Announcement(
+          id: '1', title: 'old', body: '', publishedAt: DateTime(2026, 1, 1)),
+      Announcement(
+          id: '2', title: 'new', body: '', publishedAt: DateTime(2026, 6, 1)),
     ]);
     final r = await GetAnnouncements(repo).call();
     expect((r as Ok<List<Announcement>>).value.first.title, 'new');

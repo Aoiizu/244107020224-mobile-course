@@ -11,7 +11,8 @@ class AnnouncementModel {
   final String id, title, body;
   final String publishedAt;
 
-  factory AnnouncementModel.fromJson(Map<String, dynamic> j) => AnnouncementModel(
+  factory AnnouncementModel.fromJson(Map<String, dynamic> j) =>
+      AnnouncementModel(
         id: '${j['id']}',
         title: j['title'] as String? ?? '',
         body: j['body'] as String? ?? '',
@@ -22,6 +23,7 @@ class AnnouncementModel {
         id: id,
         title: title,
         body: body,
-        publishedAt: DateTime.tryParse(publishedAt) ?? DateTime.fromMillisecondsSinceEpoch(0),
+        publishedAt: DateTime.tryParse(publishedAt) ??
+            DateTime.fromMillisecondsSinceEpoch(0),
       );
 }

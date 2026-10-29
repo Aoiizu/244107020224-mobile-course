@@ -9,8 +9,8 @@ import '../../domain/usecases/get_announcements.dart';
 final announcementRepositoryProvider = Provider<AnnouncementRepository>(
     (_) => AnnouncementRepositoryImpl(AnnouncementRemoteSource()));
 
-final getAnnouncementsProvider =
-    Provider((ref) => GetAnnouncements(ref.watch(announcementRepositoryProvider)));
+final getAnnouncementsProvider = Provider(
+    (ref) => GetAnnouncements(ref.watch(announcementRepositoryProvider)));
 
 final announcementsProvider = FutureProvider<List<Announcement>>((ref) async {
   final r = await ref.watch(getAnnouncementsProvider).call();
