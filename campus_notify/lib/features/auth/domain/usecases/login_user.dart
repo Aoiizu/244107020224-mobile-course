@@ -8,12 +8,13 @@ class LoginUser {
   final AuthRepository _repo;
 
   Future<Result<AuthSession>> call(String email, String password) async {
-    if (!email.contains('@')) {
+    final cleanEmail = email.trim().toLowerCase();
+    if (!cleanEmail.contains('@')) {
       return const Err(ValidationFailure('Enter a valid email'));
     }
     if (password.length < 6) {
       return const Err(ValidationFailure('Password must be at least 6 characters'));
     }
-    return _repo.login(email, password);
+    return _repo.login(cleanEmail, password);
   }
 }
