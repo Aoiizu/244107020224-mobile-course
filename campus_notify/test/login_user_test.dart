@@ -1,9 +1,9 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:PKG_NAME/core/failures.dart';
-import 'package:PKG_NAME/core/result.dart';
-import 'package:PKG_NAME/features/auth/domain/entities/auth_session.dart';
-import 'package:PKG_NAME/features/auth/domain/repositories/auth_repository.dart';
-import 'package:PKG_NAME/features/auth/domain/usecases/login_user.dart';
+import 'package:campus_notification_app/core/failures.dart';
+import 'package:campus_notification_app/core/result.dart';
+import 'package:campus_notification_app/features/auth/domain/entities/auth_session.dart';
+import 'package:campus_notification_app/features/auth/domain/repositories/auth_repository.dart';
+import 'package:campus_notification_app/features/auth/domain/usecases/login_user.dart';
 
 class CapturingAuthRepo implements AuthRepository {
   String? lastEmail;
