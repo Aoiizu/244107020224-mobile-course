@@ -22,8 +22,9 @@ class _HomePageState extends ConsumerState<HomePage> {
     super.initState();
     if (Firebase.apps.isNotEmpty) {
       FirebaseMessaging.instance.getToken().then((t) {
-        if (mounted && t != null)
+        if (mounted && t != null) {
           setState(() => _token = '${t.substring(0, 12)}...');
+        }
       });
     }
   }

@@ -22,7 +22,8 @@ class CapturingAuthRepo implements AuthRepository {
 }
 
 void main() {
-  test('trims and lowercases the email before calling the repository', () async {
+  test('trims and lowercases the email before calling the repository',
+      () async {
     final repo = CapturingAuthRepo();
     final r = await LoginUser(repo).call('  Alif@Mail.COM ', '123456');
     expect(r, isA<Ok<AuthSession>>());

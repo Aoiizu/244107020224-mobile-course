@@ -13,7 +13,8 @@ class LoginUser {
       return const Err(ValidationFailure('Enter a valid email'));
     }
     if (password.length < 6) {
-      return const Err(ValidationFailure('Password must be at least 6 characters'));
+      return const Err(
+          ValidationFailure('Password must be at least 6 characters'));
     }
     return _repo.login(cleanEmail, password);
   }
