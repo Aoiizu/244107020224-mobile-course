@@ -7,6 +7,7 @@ import '../../../../core/format.dart';
 import '../../../../routes.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
 import '../providers/announcement_providers.dart';
+import '../widgets/announcement_list_view.dart';
 
 class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key});
@@ -31,7 +32,7 @@ class _HomePageState extends ConsumerState<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    final list = ref.watch(announcementsProvider);
+    final list = ref.watch(visibleAnnouncementsProvider);
     return Scaffold(
       appBar: AppBar(title: const Text('Campus Notify'), actions: [
         IconButton(
@@ -43,6 +44,16 @@ class _HomePageState extends ConsumerState<HomePage> {
         Padding(
             padding: const EdgeInsets.all(8),
             child: Text('FCM token: $_token')),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+          child: TextField(
+            onChanged: ref.read(searchQueryProvider.notifier).set,
+            decoration: const InputDecoration(
+              prefixIcon: Icon(Icons.search),
+              hintText: 'Search by title',
+            ),
+          ),
+        ),
         Expanded(
           child: list.when(
             loading: () => const Center(child: CircularProgressIndicator()),
@@ -55,19 +66,11 @@ class _HomePageState extends ConsumerState<HomePage> {
                 ),
               ]),
             ),
-            data: (items) => items.isEmpty
-                ? const Center(child: Text('No announcements yet.'))
-                : ListView.builder(
-                    itemCount: items.length,
-                    itemBuilder: (_, i) {
-                      final a = items[i];
-                      return ListTile(
-                        title: Text(a.title),
-                        subtitle: Text(formatDate(a.publishedAt)),
-                        onTap: () => context.go(Routes.announcementOf(a.id)),
-                      );
-                    },
-                  ),
+            data: (items) => AnnouncementListView(
+              items: items,
+              query: ref.watch(searchQueryProvider),
+              onOpen: (id) => context.go(Routes.announcementOf(id)),
+            ),
           ),
         ),
       ]),

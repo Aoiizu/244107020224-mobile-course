@@ -1,121 +1,174 @@
 # Lab 1 
-![alt text](image-33.png)
-![alt text](image-34.png)
-![alt text](image-35.png)
+![alt text](image-39.png)
+Inside ai-logs.md
+## Announcement title search with empty state
 
-# Lab 2
-![alt text](image-36.png)
+### Design
+- Filtering rule is a pure domain use case (no Flutter/Dio imports).
+- A `Notifier<String>` holds the query; a derived provider combines it with `announcementsProvider`.
+- The widget only reads state and renders a list or an empty state.
 
-# Lab 3
-![alt text](image-37.png)
-
-# AI Review (raw output) - Week 8
-
-**PR:** feat(auth): trim and lowercase email before login + tests
-
-**Prompt:**
-```
-Review this Flutter PR as a senior Flutter dev.
-Context: feature-first Clean Architecture
-(presentation -> domain <- data),
-Riverpod, GoRouter, SQLite + Dio.
-Focus: correctness, architecture, tests. Ignore style.
-Give the top 5 findings + severity (blocker/suggestion)
-+ rationale + proposed code fix.
-```
-
-**Summary:** No blockers. The dependency rule holds: `LoginUser` imports only `core` and `domain`.
-
-## 1. Weak email validation lets bad input through (suggestion)
-**Where:** `login_user.dart`, `cleanEmail.contains('@')`.
-**Rationale:** `@`, `a@` and `@b` all pass validation and reach the repository. The normalization makes it look validated, but the rule is still very loose.
-**Fix:**
+### 1. Domain: `lib/features/announcements/domain/usecases/search_announcements.dart`
 ```dart
-static final _emailRe = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
+import '../entities/announcement.dart';
 
-if (!_emailRe.hasMatch(cleanEmail)) {
-  return const Err(ValidationFailure('Enter a valid email'));
-}
-```
+class SearchAnnouncements {
+  const SearchAnnouncements();
 
-## 2. Test gap: password and invalid-format paths are untested (suggestion)
-**Where:** `login_user_test.dart` covers trim and blank email only.
-**Rationale:** The short-password branch and the "no @" branch have no test, so a rule change would pass CI unnoticed.
-**Fix:**
-```dart
-test('short password is rejected and the repository is not called', () async {
-  final repo = CapturingAuthRepo();
-  final r = await LoginUser(repo).call('a@b.com', '123');
-  expect(r, isA<Err<AuthSession>>());
-  expect(repo.lastEmail, isNull);
-});
-
-test('email without a domain is rejected', () async {
-  final repo = CapturingAuthRepo();
-  final r = await LoginUser(repo).call('alif@', '123456');
-  expect(r, isA<Err<AuthSession>>());
-});
-```
-
-## 3. `AuthRepositoryImpl.login` turns every error into `AuthFailure` (suggestion)
-**Where:** `auth_repository_impl.dart`, `catch (e) => Err(AuthFailure(...))`.
-**Rationale:** A storage error or a network error is reported as "wrong email or password".
-
-# Assignment
-
-import 'package:flutter_test/flutter_test.dart';
-import 'package:campus_notification_app/core/failures.dart';
-import 'package:campus_notification_app/core/result.dart';
-import 'package:campus_notification_app/features/auth/domain/entities/auth_session.dart';
-import 'package:campus_notification_app/features/auth/domain/repositories/auth_repository.dart';
-import 'package:campus_notification_app/features/auth/domain/usecases/login_user.dart';
-
-class CapturingAuthRepo implements AuthRepository {
-  String? lastEmail;
-
-  @override
-  Future<Result<AuthSession>> login(String email, String password) async {
-    lastEmail = email;
-    return Ok(AuthSession(email: email));
+  List<Announcement> call(List<Announcement> items, String query) {
+    final q = query.trim().toLowerCase();
+    if (q.isEmpty) return items;
+    return items.where((a) => a.title.toLowerCase().contains(q)).toList();
   }
-
-  @override
-  Future<bool> hasSession() async => false;
-
-  @override
-  Future<void> logout() async {}
 }
+```
+
+### 2. Providers: add to `announcement_providers.dart`
+```dart
+import '../../domain/usecases/search_announcements.dart';
+
+class SearchQuery extends Notifier<String> {
+  @override
+  String build() => '';
+
+  void set(String value) => state = value;
+}
+
+final searchQueryProvider =
+    NotifierProvider<SearchQuery, String>(SearchQuery.new);
+
+final visibleAnnouncementsProvider =
+    Provider<AsyncValue<List<Announcement>>>((ref) {
+  final all = ref.watch(announcementsProvider);
+  final query = ref.watch(searchQueryProvider);
+  return all.whenData((items) => const SearchAnnouncements()(items, query));
+});
+```
+
+### 3. Widget: `presentation/widgets/announcement_list_view.dart`
+```dart
+import 'package:flutter/material.dart';
+import '../../../../core/format.dart';
+import '../../domain/entities/announcement.dart';
+
+class AnnouncementListView extends StatelessWidget {
+  const AnnouncementListView({
+    super.key,
+    required this.items,
+    required this.query,
+    required this.onOpen,
+  });
+
+  final List<Announcement> items;
+  final String query;
+  final void Function(String id) onOpen;
+
+  @override
+  Widget build(BuildContext context) {
+    if (items.isEmpty) {
+      final q = query.trim();
+      return Center(
+        child: Text(q.isEmpty ? 'No announcements yet.' : 'No results for "$q".'),
+      );
+    }
+    return ListView.builder(
+      itemCount: items.length,
+      itemBuilder: (_, i) => ListTile(
+        title: Text(items[i].title),
+        subtitle: Text(formatDate(items[i].publishedAt)),
+        onTap: () => onOpen(items[i].id),
+      ),
+    );
+  }
+}
+```
+
+### 4. Page: in `home_page.dart`
+Watch `visibleAnnouncementsProvider` instead of `announcementsProvider`, and add above the list:
+```dart
+TextField(
+  onChanged: ref.read(searchQueryProvider.notifier).set,
+  decoration: const InputDecoration(
+    prefixIcon: Icon(Icons.search),
+    hintText: 'Search by title',
+  ),
+),
+```
+Use in the `data:` branch:
+```dart
+data: (items) => AnnouncementListView(
+  items: items,
+  query: ref.watch(searchQueryProvider),
+  onOpen: (id) => context.go(Routes.announcementOf(id)),
+),
+```
+
+### Tests: `test/search_filter_test.dart`
+```dart
+import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:campus_notification_app/features/announcements/domain/entities/announcement.dart';
+import 'package:campus_notification_app/features/announcements/domain/usecases/search_announcements.dart';
+import 'package:campus_notification_app/features/announcements/presentation/widgets/announcement_list_view.dart';
 
 void main() {
-  test('trims and lowercases the email before calling the repository',
-      () async {
-    final repo = CapturingAuthRepo();
-    final r = await LoginUser(repo).call('  Alif@Mail.COM ', '123456');
-    expect(r, isA<Ok<AuthSession>>());
-    expect(repo.lastEmail, 'alif@mail.com');
+  final items = [
+    Announcement(id: '1', title: 'Library hours', body: '', publishedAt: DateTime(2026, 10, 10)),
+    Announcement(id: '2', title: 'Midterm schedule', body: '', publishedAt: DateTime(2026, 10, 12)),
+    Announcement(id: '3', title: 'Library closed', body: '', publishedAt: DateTime(2026, 10, 14)),
+  ];
+
+  test('filter ignores case', () {
+    expect(const SearchAnnouncements()(items, 'LIBRARY'), hasLength(2));
   });
 
-  test('blank email is rejected and the repository is not called', () async {
-    final repo = CapturingAuthRepo();
-    final r = await LoginUser(repo).call('   ', '123456');
-    expect(r, isA<Err<AuthSession>>());
-    expect((r as Err<AuthSession>).failure, isA<ValidationFailure>());
-    expect(repo.lastEmail, isNull);
+  test('no-match query returns empty', () {
+    expect(const SearchAnnouncements()(items, 'zzz-missing'), isEmpty);
   });
 
-  test('email without a domain is rejected', () async {
-    final repo = CapturingAuthRepo();
-    final r = await LoginUser(repo).call('alif@', '123456');
-    expect(r, isA<Err<AuthSession>>());
-    expect(repo.lastEmail, isNull);
-  });
-
-  test('short password is rejected and the repository is not called',
-      () async {
-    final repo = CapturingAuthRepo();
-    final r = await LoginUser(repo).call('a@b.com', '123');
-    expect(r, isA<Err<AuthSession>>());
-    expect(repo.lastEmail, isNull);
+  testWidgets('empty state is shown when nothing matches', (tester) async {
+    await tester.pumpWidget(MaterialApp(
+      home: Scaffold(
+        body: AnnouncementListView(items: const [], query: 'zzz', onOpen: (_) {}),
+      ),
+    ));
+    expect(find.text('No results for "zzz".'), findsOneWidget);
   });
 }
-![alt text](image-38.png)
+```
+
+### How to test
+```bash
+flutter analyze
+flutter test test/search_filter_test.dart
+flutter run
+```
+Manual: type `library`, `LIBRARY`, `zzz`, then clear the box. Expect 2 results, 2 results, the empty message, then all items.
+# Lab 2
+![alt text](image-40.png)
+![alt text](image-41.png)
+
+# Lab 3
+![alt text](image-42.png)
+
+# AI-Challenge 
+![alt text](image-44.png)
+![alt text](image-45.png)
+
+# Assignment
+![alt text](image-43.png)
+
+## Reflection
+# Reflection - Week 9
+
+## 1. Which AI hallucination did you find and how did you prove it?
+I did not find a fictional method, every method resolved in autocomplete, `grep -rn "StateProvider" lib` returned nothing, and `flutter analyze` and `flutter test` were clean.
+
+## 2. Which prompt helped most and what did you change?
+The five-slot prompt, especially the Limits slot ("no Flutter/Dio imports in domain"). It made the AI put the filter in a pure domain use case instead of the widget.
+
+## 3. Which refactor did you make to AI code?
+I kept the search rule in a pure `SearchAnnouncements` use case and extracted `AnnouncementListView`, so the page only reads state. Greps showed no `.where(` or raw data access in presentation.
+
+## 4. Which accept/reject decision was hardest?
+Whether to add a debounce on the search field. I rejected it because the list is small, and a debounce adds a timer and more state to test. I would add it for a slow API or a large database.
