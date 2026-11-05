@@ -1,174 +1,24 @@
-# Lab 1 
-![alt text](image-39.png)
-Inside ai-logs.md
-## Announcement title search with empty state
-
-### Design
-- Filtering rule is a pure domain use case (no Flutter/Dio imports).
-- A `Notifier<String>` holds the query; a derived provider combines it with `announcementsProvider`.
-- The widget only reads state and renders a list or an empty state.
-
-### 1. Domain: `lib/features/announcements/domain/usecases/search_announcements.dart`
-```dart
-import '../entities/announcement.dart';
-
-class SearchAnnouncements {
-  const SearchAnnouncements();
-
-  List<Announcement> call(List<Announcement> items, String query) {
-    final q = query.trim().toLowerCase();
-    if (q.isEmpty) return items;
-    return items.where((a) => a.title.toLowerCase().contains(q)).toList();
-  }
-}
-```
-
-### 2. Providers: add to `announcement_providers.dart`
-```dart
-import '../../domain/usecases/search_announcements.dart';
-
-class SearchQuery extends Notifier<String> {
-  @override
-  String build() => '';
-
-  void set(String value) => state = value;
-}
-
-final searchQueryProvider =
-    NotifierProvider<SearchQuery, String>(SearchQuery.new);
-
-final visibleAnnouncementsProvider =
-    Provider<AsyncValue<List<Announcement>>>((ref) {
-  final all = ref.watch(announcementsProvider);
-  final query = ref.watch(searchQueryProvider);
-  return all.whenData((items) => const SearchAnnouncements()(items, query));
-});
-```
-
-### 3. Widget: `presentation/widgets/announcement_list_view.dart`
-```dart
-import 'package:flutter/material.dart';
-import '../../../../core/format.dart';
-import '../../domain/entities/announcement.dart';
-
-class AnnouncementListView extends StatelessWidget {
-  const AnnouncementListView({
-    super.key,
-    required this.items,
-    required this.query,
-    required this.onOpen,
-  });
-
-  final List<Announcement> items;
-  final String query;
-  final void Function(String id) onOpen;
-
-  @override
-  Widget build(BuildContext context) {
-    if (items.isEmpty) {
-      final q = query.trim();
-      return Center(
-        child: Text(q.isEmpty ? 'No announcements yet.' : 'No results for "$q".'),
-      );
-    }
-    return ListView.builder(
-      itemCount: items.length,
-      itemBuilder: (_, i) => ListTile(
-        title: Text(items[i].title),
-        subtitle: Text(formatDate(items[i].publishedAt)),
-        onTap: () => onOpen(items[i].id),
-      ),
-    );
-  }
-}
-```
-
-### 4. Page: in `home_page.dart`
-Watch `visibleAnnouncementsProvider` instead of `announcementsProvider`, and add above the list:
-```dart
-TextField(
-  onChanged: ref.read(searchQueryProvider.notifier).set,
-  decoration: const InputDecoration(
-    prefixIcon: Icon(Icons.search),
-    hintText: 'Search by title',
-  ),
-),
-```
-Use in the `data:` branch:
-```dart
-data: (items) => AnnouncementListView(
-  items: items,
-  query: ref.watch(searchQueryProvider),
-  onOpen: (id) => context.go(Routes.announcementOf(id)),
-),
-```
-
-### Tests: `test/search_filter_test.dart`
-```dart
-import 'package:flutter/material.dart';
-import 'package:flutter_test/flutter_test.dart';
-import 'package:campus_notification_app/features/announcements/domain/entities/announcement.dart';
-import 'package:campus_notification_app/features/announcements/domain/usecases/search_announcements.dart';
-import 'package:campus_notification_app/features/announcements/presentation/widgets/announcement_list_view.dart';
-
-void main() {
-  final items = [
-    Announcement(id: '1', title: 'Library hours', body: '', publishedAt: DateTime(2026, 10, 10)),
-    Announcement(id: '2', title: 'Midterm schedule', body: '', publishedAt: DateTime(2026, 10, 12)),
-    Announcement(id: '3', title: 'Library closed', body: '', publishedAt: DateTime(2026, 10, 14)),
-  ];
-
-  test('filter ignores case', () {
-    expect(const SearchAnnouncements()(items, 'LIBRARY'), hasLength(2));
-  });
-
-  test('no-match query returns empty', () {
-    expect(const SearchAnnouncements()(items, 'zzz-missing'), isEmpty);
-  });
-
-  testWidgets('empty state is shown when nothing matches', (tester) async {
-    await tester.pumpWidget(MaterialApp(
-      home: Scaffold(
-        body: AnnouncementListView(items: const [], query: 'zzz', onOpen: (_) {}),
-      ),
-    ));
-    expect(find.text('No results for "zzz".'), findsOneWidget);
-  });
-}
-```
-
-### How to test
-```bash
-flutter analyze
-flutter test test/search_filter_test.dart
-flutter run
-```
-Manual: type `library`, `LIBRARY`, `zzz`, then clear the box. Expect 2 results, 2 results, the empty message, then all items.
-# Lab 2
-![alt text](image-40.png)
-![alt text](image-41.png)
-
-# Lab 3
-![alt text](image-42.png)
-
-# AI-Challenge 
-![alt text](image-44.png)
-![alt text](image-45.png)
-
 # Assignment
-![alt text](image-43.png)
 
-## Reflection
-# Reflection - Week 9
+![alt text](image-46.png)
 
-## 1. Which AI hallucination did you find and how did you prove it?
-I did not find a fictional method, every method resolved in autocomplete, `grep -rn "StateProvider" lib` returned nothing, and `flutter analyze` and `flutter test` were clean.
+## Asking Schedule 
+![alt text](image-47.png)
 
-## 2. Which prompt helped most and what did you change?
-The five-slot prompt, especially the Limits slot ("no Flutter/Dio imports in domain"). It made the AI put the filter in a pure domain use case instead of the widget.
+# Reflection - Week 10: AI Feature Integration
 
-## 3. Which refactor did you make to AI code?
-I kept the search rule in a pure `SearchAnnouncements` use case and extracted `AnnouncementListView`, so the page only reads state. Greps showed no `.where(` or raw data access in presentation.
+## 1. Which AI feature did you integrate and why?
+I integrated a chat assistant for campus questions. Students already read announcements in the app, and a short Q&A is the fastest way to find a date or a rule. It calls the Gemini API through a clean-architecture slice (use case in domain, remote source and repository in data, provider and page in presentation).
 
-## 4. Which accept/reject decision was hardest?
-Whether to add a debounce on the search field. I rejected it because the list is small, and a debounce adds a timer and more state to test. I would add it for a slow API or a large database.
+## 2. How do you protect user privacy when using AI API?
+- I send only the typed question and earlier chat turns, with no profile data.
+- A domain use case redacts emails and long numbers (phone, ID) before anything leaves the app.
+- The system prompt tells the model never to ask for or repeat personal data.
+- The API key is kept in secure storage and sent in a header, not in the URL or the source code.
+- The AI client uses its own Dio, so the campus login token is never sent to the AI provider.
+
+## 3. What fallback do you provide if AI service errors?
+Each failure shows a clear message, no key, key rejected, too many requests, service busy, or unexpected response. The user can retry, or use the announcement list, which does not depend on the AI. A timeout stops the request, so the app never waits forever.
+
+## 4. One thing you learned about AI feature UX on mobile?
+A visible loading state and a clear error message matter more than a clever answer. The call can take several seconds or fail on a weak connection, so the user must always know whether the app is thinking, failed, or can be retried.

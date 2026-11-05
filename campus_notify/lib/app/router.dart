@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../features/announcements/presentation/pages/announcement_page.dart';
 import '../features/announcements/presentation/pages/home_page.dart';
+import '../features/assistant/presentation/pages/chat_page.dart';
 import '../features/auth/presentation/pages/login_page.dart';
 import '../features/auth/presentation/providers/auth_providers.dart';
 import '../routes.dart';
@@ -29,6 +30,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: Routes.announcement,
         builder: (_, s) => AnnouncementPage(id: s.pathParameters['id'] ?? ''),
+      ),
+      GoRoute(
+        path: Routes.assistant,
+        builder: (_, __) => const ChatPage(),
       ),
     ],
   );

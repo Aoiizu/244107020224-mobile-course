@@ -1,143 +1,66 @@
-## Announcement title search with empty state
+# AI log - Week 10 (AI feature: campus assistant chat)
 
-### Design
-- Filtering rule is a pure domain use case (no Flutter/Dio imports).
-- A `Notifier<String>` holds the query; a derived provider combines it with `announcementsProvider`.
-- The widget only reads state and renders a list or an empty state.
+## Tool used
+Claude (chat assistant). Model/version: <fill in>
 
-### 1. Domain: `lib/features/announcements/domain/usecases/search_announcements.dart`
-```dart
-import '../entities/announcement.dart';
+## Feature
+Chat assistant that answers questions about campus announcements, using the Gemini `generateContent` REST API.
 
-class SearchAnnouncements {
-  const SearchAnnouncements();
-
-  List<Announcement> call(List<Announcement> items, String query) {
-    final q = query.trim().toLowerCase();
-    if (q.isEmpty) return items;
-    return items.where((a) => a.title.toLowerCase().contains(q)).toList();
-  }
-}
+## System prompt
+```
+You are the Campus Notify assistant. Answer in the same language as the user,
+in at most 3 sentences. Only help with campus announcements, schedules and
+study questions. Never ask for or repeat personal data (ID numbers, phone
+numbers, passwords). If you are not sure, say so.
 ```
 
-### 2. Providers: add to `announcement_providers.dart`
-```dart
-import '../../domain/usecases/search_announcements.dart';
+## User prompt (example) and context
+- User prompt: "When is the midterm?"
+- Context sent: earlier chat turns only. No tokens, no campus Bearer token, no user profile.
+- Not sent: IDs, phone numbers, emails (redacted in the domain use case).
 
-class SearchQuery extends Notifier<String> {
-  @override
-  String build() => '';
+## Initial AI output
+<paste the raw answer you got before changing anything>
 
-  void set(String value) => state = value;
-}
+## Real results of the checks (fill in)
 
-final searchQueryProvider =
-    NotifierProvider<SearchQuery, String>(SearchQuery.new);
-
-final visibleAnnouncementsProvider =
-    Provider<AsyncValue<List<Announcement>>>((ref) {
-  final all = ref.watch(announcementsProvider);
-  final query = ref.watch(searchQueryProvider);
-  return all.whenData((items) => const SearchAnnouncements()(items, query));
-});
+### Model name and API shape
+The codelab uses `gemini-pro` and puts the key in the URL (`?key=`). I checked what the API really accepts:
 ```
-
-### 3. Widget: `presentation/widgets/announcement_list_view.dart`
-```dart
-import 'package:flutter/material.dart';
-import '../../../../core/format.dart';
-import '../../domain/entities/announcement.dart';
-
-class AnnouncementListView extends StatelessWidget {
-  const AnnouncementListView({
-    super.key,
-    required this.items,
-    required this.query,
-    required this.onOpen,
-  });
-
-  final List<Announcement> items;
-  final String query;
-  final void Function(String id) onOpen;
-
-  @override
-  Widget build(BuildContext context) {
-    if (items.isEmpty) {
-      final q = query.trim();
-      return Center(
-        child: Text(q.isEmpty ? 'No announcements yet.' : 'No results for "$q".'),
-      );
-    }
-    return ListView.builder(
-      itemCount: items.length,
-      itemBuilder: (_, i) => ListTile(
-        title: Text(items[i].title),
-        subtitle: Text(formatDate(items[i].publishedAt)),
-        onTap: () => onOpen(items[i].id),
-      ),
-    );
-  }
-}
+<paste output of the models list command>
 ```
+- Model I used: <name> (found in the list: yes / no)
+- Key sent in the `x-goog-api-key` header, not in the URL, so it does not show in logs.
 
-### 4. Page: in `home_page.dart`
-Watch `visibleAnnouncementsProvider` instead of `announcementsProvider`, and add above the list:
-```dart
-TextField(
-  onChanged: ref.read(searchQueryProvider.notifier).set,
-  decoration: const InputDecoration(
-    prefixIcon: Icon(Icons.search),
-    hintText: 'Search by title',
-  ),
-),
+### Verification
+- [ ] Every line read, unclear parts marked: <list>
+- [ ] APIs exist (autocomplete + docs): <result>
+- [ ] `grep` for framework imports in domain: ZERO hits
+- [ ] `grep` for secrets in source: ZERO hits
+- [ ] `flutter analyze` clean
+- [ ] `flutter test` green
+- [ ] Manual: no key, wrong key, offline, normal question, long input
+
+## Problem found (write only what really happened)
+- What was wrong or risky: <describe>
+- Proof: <command + output, or failing test>
+- Fix: <what I changed>
+
+## Accept / reject table
+
+| Part | Proposal | Decision | Evidence | Reason |
+|---|---|---|---|---|
+| Key in secure storage | flutter_secure_storage | accept | grep shows no key in source | codelab rule |
+| Key in URL query | `?key=$apiKey` (codelab) | reject | | URLs end up in logs and proxies; header is safer |
+| Reuse campus Dio | | reject | | would send the campus Bearer token to a third party |
+| Redaction in use case | | accept | test output | privacy rule lives in domain and is testable |
+| Session question limit | | accept | test output | simple cost control |
+| Streaming responses | | defer | | not needed for 3-sentence answers |
+| `http` + `riverpod` packages (codelab) | | reject | `pubspec.yaml` | project already uses dio + flutter_riverpod |
+
+## Final evidence
 ```
-Use in the `data:` branch:
-```dart
-data: (items) => AnnouncementListView(
-  items: items,
-  query: ref.watch(searchQueryProvider),
-  onOpen: (id) => context.go(Routes.announcementOf(id)),
-),
+flutter analyze  ->  <paste>
+dart format --set-exit-if-changed .  ->  <paste>
+flutter test     ->  <paste>
 ```
-
-### Tests: `test/search_filter_test.dart`
-```dart
-import 'package:flutter/material.dart';
-import 'package:flutter_test/flutter_test.dart';
-import 'package:campus_notification_app/features/announcements/domain/entities/announcement.dart';
-import 'package:campus_notification_app/features/announcements/domain/usecases/search_announcements.dart';
-import 'package:campus_notification_app/features/announcements/presentation/widgets/announcement_list_view.dart';
-
-void main() {
-  final items = [
-    Announcement(id: '1', title: 'Library hours', body: '', publishedAt: DateTime(2026, 10, 10)),
-    Announcement(id: '2', title: 'Midterm schedule', body: '', publishedAt: DateTime(2026, 10, 12)),
-    Announcement(id: '3', title: 'Library closed', body: '', publishedAt: DateTime(2026, 10, 14)),
-  ];
-
-  test('filter ignores case', () {
-    expect(const SearchAnnouncements()(items, 'LIBRARY'), hasLength(2));
-  });
-
-  test('no-match query returns empty', () {
-    expect(const SearchAnnouncements()(items, 'zzz-missing'), isEmpty);
-  });
-
-  testWidgets('empty state is shown when nothing matches', (tester) async {
-    await tester.pumpWidget(MaterialApp(
-      home: Scaffold(
-        body: AnnouncementListView(items: const [], query: 'zzz', onOpen: (_) {}),
-      ),
-    ));
-    expect(find.text('No results for "zzz".'), findsOneWidget);
-  });
-}
-```
-
-### How to test
-```bash
-flutter analyze
-flutter test test/search_filter_test.dart
-flutter run
-```
-Manual: type `library`, `LIBRARY`, `zzz`, then clear the box. Expect 2 results, 2 results, the empty message, then all items.

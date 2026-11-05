@@ -36,6 +36,11 @@ class _HomePageState extends ConsumerState<HomePage> {
     return Scaffold(
       appBar: AppBar(title: const Text('Campus Notify'), actions: [
         IconButton(
+          tooltip: 'Assistant',
+          icon: const Icon(Icons.smart_toy),
+          onPressed: () => context.push(Routes.assistant),
+        ),
+        IconButton(
           icon: const Icon(Icons.logout),
           onPressed: () => ref.read(authStateProvider.notifier).logout(),
         ),

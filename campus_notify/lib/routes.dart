@@ -2,6 +2,7 @@ class Routes {
   static const login = '/login';
   static const home = '/';
   static const announcement = '/announcement/:id';
+  static const assistant = '/assistant';
   static String announcementOf(String id) => '/announcement/$id';
 }
 
