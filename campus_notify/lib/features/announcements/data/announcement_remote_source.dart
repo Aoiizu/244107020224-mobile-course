@@ -1,6 +1,9 @@
+import 'package:flutter/foundation.dart';
+
 class AnnouncementRemoteSource {
   // Mock data. Swap for dio.get('/announcements') when a real API exists.
   Future<List<Map<String, dynamic>>> fetchAll() async {
+    debugPrint('[remote] announcements fetch');
     await Future.delayed(const Duration(milliseconds: 400));
     return [
       {

@@ -1,24 +1,32 @@
+# Flutter Device 
+![alt text](image-48.png)
+
+# Performance
+![alt text](image-49.png)
+![alt text](image-50.png)
+![alt text](image-51.png)
+
+## Memory Usage
+![alt text](image-52.png)
+## Network Usage
+![alt text](image-53.png)
+# Logging
+![alt text](image-54.png)
+
 # Assignment
 
-![alt text](image-46.png)
+![alt text](image-55.png)
 
-## Asking Schedule 
-![alt text](image-47.png)
+# Reflection 
 
-# Reflection - Week 10: AI Feature Integration
+## 1. Which optimization had the biggest impact and why?
+The repository cache. Before, opening each detail page fetched the whole announcement list again, so my test (home, detail 1, detail 2) made 3 remote calls. After the cache it made 1. Extracting the widgets also stopped the home page from rebuilding while typing, but with only 3 list items I could not see that in frame time, only in rebuild counts.
 
-## 1. Which AI feature did you integrate and why?
-I integrated a chat assistant for campus questions. Students already read announcements in the app, and a short Q&A is the fastest way to find a date or a rule. It calls the Gemini API through a clean-architecture slice (use case in domain, remote source and repository in data, provider and page in presentation).
+## 2. How did you verify optimizations actually work (not placebo)?
+I ran the same steps on the same phone in profile mode before and after, and compared the `[remote]` log lines and the rebuild counts in DevTools. I also wrote tests for the cache (call counts, expiry, stale data on error) and a widget test to check that search still filters the list the same way.
 
-## 2. How do you protect user privacy when using AI API?
-- I send only the typed question and earlier chat turns, with no profile data.
-- A domain use case redacts emails and long numbers (phone, ID) before anything leaves the app.
-- The system prompt tells the model never to ask for or repeat personal data.
-- The API key is kept in secure storage and sent in a header, not in the URL or the source code.
-- The AI client uses its own Dio, so the campus login token is never sent to the AI provider.
+## 3. What trade-offs did you face (for example, code complexity vs performance)?
+The cache adds state and a time limit to the repository, and the extracted widgets mean more small files. The data can also be up to 30 seconds old. I kept the limit short and only use old data when a refresh fails.
 
-## 3. What fallback do you provide if AI service errors?
-Each failure shows a clear message, no key, key rejected, too many requests, service busy, or unexpected response. The user can retry, or use the announcement list, which does not depend on the AI. A timeout stops the request, so the app never waits forever.
-
-## 4. One thing you learned about AI feature UX on mobile?
-A visible loading state and a clear error message matter more than a clever answer. The call can take several seconds or fail on a weak connection, so the user must always know whether the app is thinking, failed, or can be retried.
+## 4. When should premature optimization be avoided?
+When nothing shows a problem yet. My list only has 3 mock items, so frame times were already fine. I only changed what the logs and DevTools showed (extra fetches and rebuilds), and I did not add pagination or image caching because I had no case that needed them.

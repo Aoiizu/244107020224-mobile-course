@@ -21,9 +21,10 @@ final announcementsProvider = FutureProvider<List<Announcement>>((ref) async {
   };
 });
 
-// Repository straight to provider: one-line lookup, no use case needed.
+// autoDispose: the state of a detail page is released when the page closes,
+// instead of staying in memory for every id ever opened.
 final announcementProvider =
-    FutureProvider.family<Announcement, String>((ref, id) async {
+    FutureProvider.autoDispose.family<Announcement, String>((ref, id) async {
   final r = await ref.watch(announcementRepositoryProvider).fetchById(id);
   return switch (r) {
     Ok(:final value) => value,
