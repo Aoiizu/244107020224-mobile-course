@@ -11,6 +11,7 @@ class AnnouncementSearchField extends ConsumerWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8),
       child: TextField(
+        key: const Key('search-field'),
         onChanged: ref.read(searchQueryProvider.notifier).set,
         decoration: const InputDecoration(
           prefixIcon: Icon(Icons.search),
