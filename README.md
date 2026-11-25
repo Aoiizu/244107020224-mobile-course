@@ -1,21 +1,59 @@
+# Assignment
+![alt text](image-60.png)
+![alt text](image-61.png)
 
-# Feature tested
-Login and announcements (list, search, detail), plus the token refresh and the assistant error handling behind them.
-![alt text](image-56.png)
+## flutter-ci.yml
 
-# Assignment 
-![alt text](image-57.png)
-![alt text](image-58.png)
-![alt text](image-59.png)
+```yaml
+name: Flutter CI
 
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
 
-# Reflection - Week 12: Testing and Quality Assurance
+permissions:
+  contents: read
 
-## 1. Which bug would have been easiest to miss without the tests you wrote?
-The token refresh retry. When a request returns 401 the app refreshes and retries once, and nothing in normal use shows what happens if the retry also fails. `api_client_test.dart` covers that case with a scripted adapter, and when I removed the `retried` check on purpose the test failed. <replace with your own result if it differed>
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
-## 2. Where did you need a fake, and how did it make the test more consistent?
-I used fakes for the secure token storage, the Dio adapter, the Gemini source and the repositories. The fake Dio adapter lets me script the exact status codes (401, then 200) without a network, and the fake token store avoids touching the phone's secure storage, so the tests run the same way every time.
+jobs:
+  test-and-build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: campus_notify
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+      - run: flutter pub get
+      - run: dart format --output=none --set-exit-if-changed .
+      - run: flutter analyze --fatal-infos
+      - run: flutter test --coverage
+      - run: flutter build apk --release
+      - run: flutter build appbundle --release
+      - uses: actions/upload-artifact@v4
+        with:
+          name: campus-notify-android-builds
+          path: |
+            campus_notify/build/app/outputs/flutter-apk/app-release.apk
+            campus_notify/build/app/outputs/bundle/release/app-release.aab
+          if-no-files-found: error
+          retention-days: 7
+```
+# Reflection - Week 13 : CI/CD and Automation
 
-## 3. What did the widget and integration tests each tell you about your feature?
-The widget tests showed that single screens behave correctly in each state: invalid input feedback, loading, error with Retry, empty results. The integration test showed that login, routing, search and the detail page work together on a real device, which the widget tests cannot show. <add anything you noticed while running it on the phone>
+## 1. What problem was detected automatically before changes were merged?
+The workflow checks formatting, static analysis and tests on every pull request, so problems are caught before they reach `main`. 
+
+## 2. What information would help you investigate a failed build?
+The most useful information is the name of the failing step and its log output, because it shows whether the problem is formatting, analysis, a test or the Android build.
+
+## 3. What still needs approval or manual review before a release?
+The APK are built in release mode but are not signed with a production keystore, so they cannot be published to the Play Store yet. The app still needs a review from the tester and need to have permissions such as notifications, and a check that the Gemini API key is not exposed, because a value compiled into the app can be extracted from the APK. The `integration_test` also does not run in this workflow, so login, search and the detail page still need a manual check on a device.
